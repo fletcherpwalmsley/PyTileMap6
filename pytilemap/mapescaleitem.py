@@ -75,7 +75,7 @@ class MapScaleItem(QGraphicsObject, MapItem):
             Almost all the argumnets accepted by the functions.makeBrush() and functions.makePen()
             are accepted.
         """
-        QGraphicsObject.__init__(self, parent=parent)
+        QGraphicsObject.__init__(self, parent)
         MapItem.__init__(self)
 
         self.setZValue(100)

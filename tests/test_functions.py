@@ -134,7 +134,7 @@ def test_color_default(colorArgs, qcolor):
 @pytest.mark.parametrize('style', [SolidPattern, NoBrush, Dense1Pattern])
 def test_make_brush_single_color(colorArgs, qcolor, style):
     testBrush = makeBrush(colorArgs, style=style)
-    assert testBrush == QBrush(qcolor, style=style)
+    assert testBrush == QBrush(qcolor, bs=style)
 
 
 @pytest.mark.parametrize('colorArgs,qcolor', [
@@ -151,8 +151,8 @@ def test_make_brush_single_color(colorArgs, qcolor, style):
 ])
 @pytest.mark.parametrize('style', [SolidPattern, NoBrush, Dense1Pattern])
 def test_make_brush_list_of_colors(colorArgs, qcolor, style):
-    testBrush = makeBrush(colorArgs, style=style)
-    refBrushes = [QBrush(c, style=style) for c in qcolor]
+    testBrush = makeBrush(colorArgs, bs=style)
+    refBrushes = [QBrush(c, bs=style) for c in qcolor]
     assert testBrush == refBrushes
 
 
@@ -167,8 +167,8 @@ def test_make_brush_list_of_colors(colorArgs, qcolor, style):
 @pytest.mark.parametrize('style', [SolidLine, DashLine])
 @pytest.mark.parametrize('width', [0.0, 1, 3.])
 def test_make_pen_single_color(colorArgs, qcolor, width, style):
-    testPen = makePen(colorArgs, width=width, style=style)
-    assert testPen == QPen(QBrush(qcolor), width, style=style)
+    testPen = makePen(colorArgs, width=width, bs=style)
+    assert testPen == QPen(QBrush(qcolor), width, s=style)
 
 
 @pytest.mark.parametrize('colorArgs,qcolor', [
@@ -186,8 +186,8 @@ def test_make_pen_single_color(colorArgs, qcolor, width, style):
 @pytest.mark.parametrize('style', [SolidLine, DashLine])
 @pytest.mark.parametrize('width', [0., 1, 3.])
 def test_make_pen_list_of_colors(colorArgs, qcolor, width, style):
-    testPen = makePen(colorArgs, width=width, style=style)
-    refPen = [QPen(QBrush(c), width, style=style) for c in qcolor]
+    testPen = makePen(colorArgs, width=width, bs=style)
+    refPen = [QPen(QBrush(c), width, s=style) for c in qcolor]
     assert testPen == refPen
 
 
@@ -206,8 +206,8 @@ def test_make_pen_list_of_colors(colorArgs, qcolor, width, style):
 @pytest.mark.parametrize('style', [SolidLine, DashLine])
 @pytest.mark.parametrize('width', [(0., 1, 3.)])
 def test_make_pen_list_of_colors_and_widths(colorArgs, qcolor, width, style):
-    testPen = makePen(colorArgs, width=width, style=style)
-    refPen = [QPen(QBrush(c), w, style=style) for c, w in zip(qcolor, width)]
+    testPen = makePen(colorArgs, width=width, bs=style)
+    refPen = [QPen(QBrush(c), w, s=style) for c, w in zip(qcolor, width)]
     assert testPen == refPen
 
 

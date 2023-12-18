@@ -1,6 +1,6 @@
 
 import sys
-import sip
+# import sip
 
 import qtpy
 
@@ -12,10 +12,10 @@ __all__ = [
 
 
 try:
-    if qtpy.PYQT5:
+    if qtpy.PYQT5 or qtpy.PYSIDE6:
         QVARIANT_API = 2
     else:
-        QVARIANT_API = sip.getapi('QVariant')
+        QVARIANT_API = 1
 except ValueError:
     QVARIANT_API = 1
 
@@ -27,7 +27,7 @@ else:
     def getQVariantValue(variant):
         return variant
 
-if qtpy.PYQT5:
+if qtpy.PYQT5 or qtpy.PYSIDE6:
     def wheelAngleDelta(wheelEvent):
         return wheelEvent.angleDelta().y()
 else:
@@ -35,7 +35,7 @@ else:
         return wheelEvent.delta()
 
 
-if qtpy.PYQT5:
+if qtpy.PYQT5 or qtpy.PYSIDE6:
     from qtpy.QtCore import QStandardPaths
 
     def getCacheFolder():

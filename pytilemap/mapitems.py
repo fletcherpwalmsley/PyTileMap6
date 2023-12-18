@@ -99,7 +99,7 @@ class MapGraphicsCircleItem(QGraphicsEllipseItem, MapItem):
         Note:
             The management of the parent item is work in progress.
         """
-        QGraphicsEllipseItem.__init__(self, parent=parent)
+        QGraphicsEllipseItem.__init__(self, parent)
         MapItem.__init__(self)
 
         self._lon = longitude
@@ -194,7 +194,7 @@ class MapGraphicsLineItem(QGraphicsLineItem, MapItem):
     QtParentClass = QGraphicsLineItem
 
     def __init__(self, lon0, lat0, lon1, lat1, parent=None):
-        QGraphicsLineItem.__init__(self, parent=parent)
+        QGraphicsLineItem.__init__(self, parent)
         MapItem.__init__(self)
 
         self._lon0 = lon0
@@ -226,7 +226,7 @@ class MapGraphicsPolylineItem(QGraphicsPathItem, MapItem):
     QtParentClass = QGraphicsPathItem
 
     def __init__(self, longitudes, latitudes, parent=None):
-        QGraphicsPathItem.__init__(self, parent=parent)
+        QGraphicsPathItem.__init__(self, parent)
         MapItem.__init__(self)
 
         assert len(longitudes) == len(latitudes)
@@ -274,7 +274,7 @@ class MapGraphicsPixmapItem(QGraphicsPixmapItem, MapItem):
             scene(MapGraphicsScene): Scene the item belongs to.
             parent(QGraphicsItem): Parent item.
         """
-        QGraphicsPixmapItem.__init__(self, parent=parent)
+        QGraphicsPixmapItem.__init__(self, parent)
         MapItem.__init__(self)
 
         self._lon = longitude
@@ -343,7 +343,7 @@ class MapGraphicsLinesGroupItem(QGraphicsItem, MapItem):
     QtParentClass = QGraphicsItem
 
     def __init__(self, longitudes, latitudes, parent=None):
-        QGraphicsItem.__init__(self, parent=parent)
+        QGraphicsItem.__init__(self, parent)
         MapItem.__init__(self)
 
         assert len(longitudes) == len(latitudes)
@@ -364,7 +364,7 @@ class MapGraphicsLinesGroupItem(QGraphicsItem, MapItem):
         return self._linesGroup.boundingRect()
 
     def setLineStyle(self, colors, width=1., style=SolidLine):
-        pen = makePen(colors, width=width, style=style)
+        pen = makePen(colors, width=width, bs=style)
 
         if isinstance(pen, list):
             if len(pen) != len(self._lines):

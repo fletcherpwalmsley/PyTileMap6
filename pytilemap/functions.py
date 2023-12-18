@@ -1,5 +1,4 @@
 import sys
-import sip
 import numpy as np
 
 from qtpy.QtCore import Qt
@@ -153,18 +152,18 @@ def makeColor(args):
     return makeFunction(args)
 
 
-def makeBrush(color, style=SolidPattern):
+def makeBrush(color, bs=SolidPattern):
     if color is None:
         return QBrush(Qt.NoBrush)
     if isinstance(color, QBrush):
         return QBrush(color)
     color = makeColor(color)
     if isinstance(color, list):
-        return [QBrush(c, style) for c in color]
-    return QBrush(color, style)
+        return [QBrush(c, bs) for c in color]
+    return QBrush(color, bs)
 
 
-def makePen(color, width=1.0, style=SolidLine, cap=SquareCap, join=BevelJoin):
+def makePen(color, width=1.0, bs=SolidLine, cap=SquareCap, join=BevelJoin):
     if color is None:
         return QPen(Qt.NoPen)
     if isinstance(color, QPen):
@@ -173,8 +172,8 @@ def makePen(color, width=1.0, style=SolidLine, cap=SquareCap, join=BevelJoin):
     if isinstance(brush, list):
         if not hasattr(width, '__iter__'):
             width = np.full(len(brush), width, dtype=np.float64)
-        return [QPen(b, w, style=style) for b, w in izip(brush, width)]
-    return QPen(brush, width, style=style, cap=cap, join=join)
+        return [QPen(b, w, s=bs) for b, w in izip(brush, width)]
+    return QPen(brush, width, s=bs, c=cap, j=join)
 
 
 def clip(value, minValue, maxValue):

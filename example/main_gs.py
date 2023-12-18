@@ -73,7 +73,7 @@ class MapZoom(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
-        view = MapGraphicsView(tileSource=MapTileSourceHere())
+        view = MapGraphicsView(tileSource=MapTileSourceOSM())
 
         self.setCentralWidget(view)
 
