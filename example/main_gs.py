@@ -77,7 +77,7 @@ class MapZoom(QMainWindow):
 
         self.setCentralWidget(view)
 
-        view.scene().setCenter(10.065990, 44.861041)
+        view.scene().setCenter(172.6, -43.5)
         view.setOptimizationFlag(QGraphicsView.DontSavePainterState, True)
         view.setRenderHint(QPainter.Antialiasing, True)
         view.setRenderHint(QPainter.SmoothPixmapTransform, True)
@@ -98,7 +98,7 @@ class MapZoom(QMainWindow):
             lons.append(p[1])
             lats.append(p[0])
 
-        lineItem = view.scene().addLine(10.191037, 44.832810, 10.201736, 44.837632)
+        lineItem = view.scene().addLine(172.6, -43.5, 172.7, -43.6)
         lineItem.setPen(QPen(QBrush(Qt.blue), 3.0))
 
         polylineItem = view.scene().addPolyline(lons, lats)

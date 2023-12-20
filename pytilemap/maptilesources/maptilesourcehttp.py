@@ -2,76 +2,74 @@ from __future__ import print_function, absolute_import
 
 from qtpy.QtCore import Qt, Signal, Slot, QObject, QByteArray, QUrl, QThread
 from qtpy.QtGui import QPixmap
-from qtpy.QtNetwork import QNetworkRequest, QNetworkDiskCache, QNetworkAccessManager, \
-    QNetworkReply
 
 from .maptilesource import MapTileSource
-from ..qtsupport import getQVariantValue, getCacheFolder
-
-DEFAULT_CACHE_SIZE = 1024 * 1024 * 100
+import grequests
+import requests
+import os
 
 
 class MapTileHTTPLoader(QObject):
 
     tileLoaded = Signal(int, int, int, QByteArray)
 
-    def __init__(self, cacheSize=DEFAULT_CACHE_SIZE, userAgent='(PyQt) TileMap 1.0', parent=None):
+    def __init__(self, parent=None):
         QObject.__init__(self, parent=parent)
-        self._manager = None
-        self._cache = None
-        self._cacheSize = cacheSize
-
-        try:
-            # Convert user agent to bytes
-            userAgent = userAgent.encode()
-        except:
-            # no encode method exists. This hsould be the Python 2 case
-            pass
-
-        self._userAgent = userAgent
         self._tileInDownload = dict()
+        self._grs = list()
+        self._gps_keys = list()
 
     @Slot(int, int, int, str)
     def loadTile(self, x, y, zoom, url):
-        if self._manager is None:
-            self._manager = QNetworkAccessManager(parent=self)
-            self._manager.finished.connect(self.handleNetworkData)
-            cache = QNetworkDiskCache()
-            cacheDir = getCacheFolder()
-            cache.setCacheDirectory(cacheDir)
-            cache.setMaximumCacheSize(self._cacheSize)
-            self._manager.setCache(cache)
 
+        url = f"https://basemaps.linz.govt.nz/v1/tiles/aerial/WebMercatorQuad/{zoom}/{x}/{y}.webp?api=c01hj0qr6shwmem3jazjgqvrzsc"
         key = (x, y, zoom)
-        url = QUrl(url)
         if key not in self._tileInDownload:
             # Request the image to the map service
-            request = QNetworkRequest(url=url)
-            request.setRawHeader(b'User-Agent', self._userAgent)
-            request.setAttribute(QNetworkRequest.User, key)
-            request.setAttribute(QNetworkRequest.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
-            self._tileInDownload[key] = self._manager.get(request)
+            print(f"Requesting: {url}")
+            self._tileInDownload[key] = requests.get(url).content
+            # base_path = os.path.join(f"{zoom}/{x}")
+            # if not os.path.exists(base_path):
+            #     os.makedirs(base_path, exist_ok=True)
+            #
+            # with open(f"{base_path}/{y}.png", mode="wb") as f:
+            #     f.write(self._tileInDownload[key])
+            #     print(f"Saved {base_path} to disk")
 
-    @Slot(QNetworkReply)
-    def handleNetworkData(self, reply):
-        tp = getQVariantValue(reply.request().attribute(QNetworkRequest.User))
-        if tp in self._tileInDownload:
-            del self._tileInDownload[tp]
+        self.tileLoaded.emit(x, y, zoom, self._tileInDownload[key])
 
-        if not reply.error():
-            data = reply.readAll()
-            self.tileLoaded.emit(tp[0], tp[1], tp[2], data)
-        reply.close()
-        reply.deleteLater()
+    @Slot(int, int, int, str)
+    def asyncLoadTile(self, x, y, zoom, url):
+        url = f"https://basemaps.linz.govt.nz/v1/tiles/aerial/WebMercatorQuad/{zoom}/{x}/{y}.jpeg?api=c01hj0qr6shwmem3jazjgqvrzsc"
+        key = (x, y, zoom)
+        if key not in self._tileInDownload:
+            # Request the image to the map service
+            print(f"Adding: {url} to request que")
+            self._grs.append(grequests.get(url))
+            self._gps_keys.append(key)
+
+
+    @Slot()
+    def asyncFetchTile(self):
+        responses = grequests.map(self._grs)
+        for key, response in zip(self._gps_keys, responses):
+            self._tileInDownload[key] = response.content
+            self.tileLoaded.emit(key[0], key[1], key[2], self._tileInDownload[key])
+
+        self._grs.clear()
+        self._gps_keys.clear()
 
     @Slot()
     def abortRequest(self, x, y, zoom):
         p = (x, y, zoom)
         if p in self._tileInDownload:
-            reply = self._tileInDownload[p]
+            # reply = self._tileInDownload[p]
             del self._tileInDownload[p]
-            reply.close()
-            reply.deleteLater()
+        #     reply.close()
+        #     reply.deleteLater()
+        print("Aborting requests")
+        self._grs.clear()
+        self._gps_keys.clear()
 
     @Slot()
     def abortAllRequests(self):
@@ -81,14 +79,13 @@ class MapTileHTTPLoader(QObject):
 
 class MapTileSourceHTTP(MapTileSource):
 
-    def __init__(self, cacheSize=DEFAULT_CACHE_SIZE, userAgent='(PyQt) TileMap 1.0',
-                 tileSize=256, minZoom=2, maxZoom=18, mapHttpLoader=None, parent=None):
+    def __init__(self, tileSize=256, minZoom=2, maxZoom=20, mapHttpLoader=None, parent=None):
         MapTileSource.__init__(self, tileSize=tileSize, minZoom=minZoom, maxZoom=maxZoom, parent=parent)
 
         if mapHttpLoader is not None:
             self._loader = mapHttpLoader
         else:
-            self._loader = MapTileHTTPLoader(cacheSize=cacheSize, userAgent=userAgent)
+            self._loader = MapTileHTTPLoader()
 
         self._loader.tileLoaded.connect(self.handleTileDataLoaded)
 
@@ -103,10 +100,18 @@ class MapTileSourceHTTP(MapTileSource):
         url = self.url(x, y, zoom)
         self._loader.loadTile(x, y, zoom, url)
 
+    def asyncLoadTiles(self, x, y, zoom):
+        url = self.url(x, y, zoom)
+        self._loader.asyncLoadTile(x, y, zoom, url)
+
+    def asyncRequestTiles(self):
+        self._loader.asyncFetchTile()
+
     @Slot(int, int, int, QByteArray)
     def handleTileDataLoaded(self, x, y, zoom, data):
         pix = QPixmap()
         pix.loadFromData(data)
+        print(f"Got {x}/{y}/{zoom}")
         self.tileReceived.emit(x, y, zoom, pix)
 
     def abortAllRequests(self):

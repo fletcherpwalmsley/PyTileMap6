@@ -229,10 +229,11 @@ class MapGraphicsScene(QGraphicsScene):
                 tp = (left + x, top + y)
                 # Request tile only if missing
                 if tp not in tilePixmaps:
-                    pix = tileSource.requestTile(tp[0], tp[1], zoom)
+                    # pix = tileSource.requestTile(tp[0], tp[1], zoom)
+                    pix = tileSource.asyncLoadTiles(tp[0], tp[1], zoom)
                     if pix is not None:
                         tilePixmaps[tp] = pix
-
+        tileSource.asyncRequestTiles()
         self.update()
 
     def tileRect(self, tx, ty):

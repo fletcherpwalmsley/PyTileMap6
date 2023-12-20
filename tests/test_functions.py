@@ -133,7 +133,7 @@ def test_color_default(colorArgs, qcolor):
 ])
 @pytest.mark.parametrize('style', [SolidPattern, NoBrush, Dense1Pattern])
 def test_make_brush_single_color(colorArgs, qcolor, style):
-    testBrush = makeBrush(colorArgs, style=style)
+    testBrush = makeBrush(colorArgs, bs=style)
     assert testBrush == QBrush(qcolor, bs=style)
 
 
