@@ -40,7 +40,7 @@ class MapLegendEntryItem(QGraphicsItemGroup):
         return self._text
 
 
-class MapLegendItem(QGraphicsObject, MapItem):
+class MapLegendItem(MapItem, QGraphicsObject):
 
     QtParentClass = QGraphicsObject
 

@@ -10,7 +10,7 @@ from .functions import makePen, makeBrush, clip
 from .qtsupport import getQVariantValue
 
 
-class MapScaleItem(QGraphicsObject, MapItem):
+class MapScaleItem(MapItem, QGraphicsObject):
     """Scale bar for the visualization of the scale of teh map.
 
     The scale bar is located on the bottom right of the map and can' be moved.

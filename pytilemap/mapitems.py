@@ -29,7 +29,7 @@ class MapItem(object):
             raise RuntimeError('MapItem must be an instance of QGraphicsItem')
 
     def itemChange(self, change, value):
-        if change == self.ItemSceneChange:
+        if change == QGraphicsItem.ItemSceneChange:
             # Disconnect the old scene, if any
             oldScene = self.scene()
             if oldScene is not None:
@@ -79,8 +79,7 @@ class MapItem(object):
     def updatePosition(self, scene):
         raise NotImplementedError()
 
-
-class MapGraphicsCircleItem(QGraphicsEllipseItem, MapItem):
+class MapGraphicsCircleItem(MapItem, QGraphicsEllipseItem):
     """Circle item for the MapGraphicsScene
     """
 
@@ -138,7 +137,7 @@ class MapGraphicsCircleItem(QGraphicsEllipseItem, MapItem):
             self.updatePosition(scene)
 
 
-class MapGraphicsRectItem(QGraphicsRectItem, MapItem):
+class MapGraphicsRectItem(MapItem, QGraphicsRectItem):
     """Circle item for the MapGraphicsScene
     """
 
@@ -189,7 +188,7 @@ class MapGraphicsRectItem(QGraphicsRectItem, MapItem):
             self.updatePosition(self.scene())
 
 
-class MapGraphicsLineItem(QGraphicsLineItem, MapItem):
+class MapGraphicsLineItem(MapItem, QGraphicsLineItem):
 
     QtParentClass = QGraphicsLineItem
 
@@ -221,7 +220,7 @@ class MapGraphicsLineItem(QGraphicsLineItem, MapItem):
             self.updatePosition(self.scene())
 
 
-class MapGraphicsPolylineItem(QGraphicsPathItem, MapItem):
+class MapGraphicsPolylineItem(MapItem, QGraphicsPathItem):
 
     QtParentClass = QGraphicsPathItem
 
@@ -258,7 +257,7 @@ class MapGraphicsPolylineItem(QGraphicsPathItem, MapItem):
             self.updatePosition(scene)
 
 
-class MapGraphicsPixmapItem(QGraphicsPixmapItem, MapItem):
+class MapGraphicsPixmapItem(MapItem, QGraphicsPixmapItem):
     """Item for showing a pixmap in a MapGraphicsScene.
     """
 
@@ -309,7 +308,7 @@ class MapGraphicsPixmapItem(QGraphicsPixmapItem, MapItem):
             self.updatePosition(scene)
 
 
-class MapGraphicsTextItem(QGraphicsSimpleTextItem, MapItem):
+class MapGraphicsTextItem(MapItem, QGraphicsSimpleTextItem):
     """Text item for the MapGraphicsScene
     """
 
@@ -338,7 +337,7 @@ class MapGraphicsTextItem(QGraphicsSimpleTextItem, MapItem):
             self.setVisible(scene._zoom >= self._min_zoom)
 
 
-class MapGraphicsLinesGroupItem(QGraphicsItem, MapItem):
+class MapGraphicsLinesGroupItem(MapItem, QGraphicsItem):
 
     QtParentClass = QGraphicsItem
 
