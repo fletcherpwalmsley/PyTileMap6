@@ -20,6 +20,10 @@ class MapItem(object):
     The default implementation connects the MapGraphicScene.sigZoomChanged() signal
     to the MapItem.setZoom() slot. This slot call the MapItem.updatePosition() method
     for updating the position of the item in reaction to a change in the zoom level.
+
+    When inheriting this class for use in a scene object, make sure it is inherited before 
+    the QGraphicsObject. As the MRO defaults to the first object, and you want the itemChange
+    method to be this one - otherwise the object will not update.
     """
 
     QtParentClass = None
