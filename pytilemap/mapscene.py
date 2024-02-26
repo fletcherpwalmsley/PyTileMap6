@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QGraphicsScene
 
 from .mapitems import MapGraphicsCircleItem, MapGraphicsLineItem, \
     MapGraphicsPolylineItem, MapGraphicsPixmapItem, MapGraphicsTextItem, \
-    MapGraphicsRectItem, MapGraphicsLinesGroupItem
+    MapGraphicsRectItem, MapGraphicsLinesGroupItem, MapGraphicsPoint
 from .maplegenditem import MapLegendItem
 from .mapescaleitem import MapScaleItem
 from .functions import iterRange
@@ -47,6 +47,7 @@ class MapGraphicsScene(QGraphicsScene):
 
         self.setSceneRect(0.0, 0.0, 400, 300)
         self.sceneRectChanged.connect(self.onSceneRectChanged)
+        self.mapScrollEnabled = True
 
     @Slot()
     def close(self):
@@ -280,6 +281,14 @@ class MapGraphicsScene(QGraphicsScene):
         centerCoord = self.lonLatFromPos(centerPos.x(), centerPos.y())
         return QPointF(centerCoord[0], centerCoord[1])
 
+    def setMapScrollState(self, state):
+        """Enable or disable the map scroll.
+
+        Args:
+            state(bool): If True, the map scroll is enabled.
+        """
+        self.mapScrollEnabled = state
+
     def translate(self, dx, dy):
         """Translate the visible area by dx, dy pixels.
 
@@ -289,7 +298,8 @@ class MapGraphicsScene(QGraphicsScene):
             dx(int): Increments for the center x coord in pixels.
             dy(int): Increments for the center y coord in pixels.
         """
-        self.setSceneRect(self.sceneRect().translated(dx, dy))
+        if self.mapScrollEnabled:
+            self.setSceneRect(self.sceneRect().translated(dx, dy))
 
     def posFromLonLat(self, lon, lat):
         """Position in scene coordinate of the WGS84 coordinates.
@@ -347,6 +357,21 @@ class MapGraphicsScene(QGraphicsScene):
         self.addItem(item)
         return item
 
+    def addPoint(self, longitude, latitude, radius):
+        """Add a new point to the graphics scene.
+
+        Args:
+            longitude(float): Longitude of the center of the point.
+            latitude(float): Latitude of the center of the point.
+            radius(float): Longitude of the center of the point.
+
+        Returns:
+            MapGraphicsPoint added to the scene.
+        """
+        item = MapGraphicsPoint(longitude, latitude, radius)
+        self.addItem(item)
+        return item
+
     def addLine(self, lon0, lat0, lon1, lat1):
         """Add a newline) to the graphics scene.
 
@@ -379,17 +404,16 @@ class MapGraphicsScene(QGraphicsScene):
         self.addItem(item)
         return item
 
-    def addPolyline(self, longitudes, latitudes):
+    def addPolyline(self, points=[]):
         """Add a new circle (point) to the graphics scene.
 
         Args:
-            longitudes(iterable): Longitudes of all the points of the polyline.
-            latitudes(iterable): Latitudes of all the points of the polyline.
+            Points(iterable): A list of MapGraphicsPoint items (optional)
 
         Returns:
             MapGraphicsPolylineItem added to the scene.
         """
-        item = MapGraphicsPolylineItem(longitudes, latitudes)
+        item = MapGraphicsPolylineItem(points)
         self.addItem(item)
         return item
 

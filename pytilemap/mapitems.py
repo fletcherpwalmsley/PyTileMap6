@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+from PySide6.QtWidgets import QGraphicsSceneMouseEvent
 
 import numpy as np
 
@@ -10,6 +11,7 @@ from qtpy.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, \
 
 from .functions import iterRange, makePen, izip
 from .qtsupport import getQVariantValue
+from PySide6.QtWidgets import QApplication
 
 SolidLine = Qt.SolidLine
 
@@ -82,6 +84,7 @@ class MapItem(object):
 
     def updatePosition(self, scene):
         raise NotImplementedError()
+
 
 class MapGraphicsCircleItem(MapItem, QGraphicsEllipseItem):
     """Circle item for the MapGraphicsScene
@@ -228,37 +231,47 @@ class MapGraphicsPolylineItem(MapItem, QGraphicsPathItem):
 
     QtParentClass = QGraphicsPathItem
 
-    def __init__(self, longitudes, latitudes, parent=None):
+    def __init__(self, points=[], parent=None):
         QGraphicsPathItem.__init__(self, parent)
         MapItem.__init__(self)
+        self._points: list[MapGraphicsPoint] = points
 
-        assert len(longitudes) == len(latitudes)
+    def createPoint(self, longitude, latitude):
+        self._points.append((longitude, latitude))
+        scene = self.scene()
+        if scene is not None:
+            self.updatePosition(scene)
 
-        self._longitudes = np.array(longitudes, dtype=np.float64)
-        self._latitudes = np.array(latitudes, dtype=np.float64)
+    def appendPoint(self, point):
+        self._points.append(point)
+        scene = self.scene()
+        if scene is not None:
+            self.updatePosition(scene)
 
     def updatePosition(self, scene):
         path = QPainterPath()
 
         self.prepareGeometryChange()
 
-        count = len(self._longitudes)
+        count = len(self._points)
         if count > 0:
-            x, y = scene.posFromLonLat(self._longitudes, self._latitudes)
-            path.moveTo(x[0], y[0])
+            long, lat = self._points[0].getLongLat()
+            x, y = scene.posFromLonLat(long, lat)
+            path.moveTo(x, y)
             for i in iterRange(1, count):
-                path.lineTo(x[i], y[i])
-
+                long, lat = self._points[i].getLongLat()
+                x, y = scene.posFromLonLat(long, lat)
+                path.lineTo(x, y)
         self.setPath(path)
 
-    def setLonLat(self, longitudes, latitudes):
-        assert len(longitudes) == len(latitudes)
+    # def setLonLat(self, longitudes, latitudes):
+    #     assert len(longitudes) == len(latitudes)
 
-        self._longitudes = np.array(longitudes, dtype=np.float64)
-        self._latitudes = np.array(latitudes, dtype=np.float64)
-        scene = self.scene()
-        if scene is not None:
-            self.updatePosition(scene)
+    #     self._longitudes = np.array(longitudes, dtype=np.float64)
+    #     self._latitudes = np.array(latitudes, dtype=np.float64)
+    #     scene = self.scene()
+    #     if scene is not None:
+    #         self.updatePosition(scene)
 
 
 class MapGraphicsPixmapItem(MapItem, QGraphicsPixmapItem):
@@ -410,3 +423,45 @@ class MapGraphicsLinesGroupItem(MapItem, QGraphicsItem):
 
     def __getitem__(self, index):
         return self._lines[index]
+
+
+class MapGraphicsPoint(MapGraphicsCircleItem):
+    def __init__(self, longitude, latitude, parent=None):
+        MapGraphicsCircleItem.__init__(self,
+                                       longitude,
+                                       latitude,
+                                       parent
+                                       )
+        self.edit_mode = False
+        # self._zoom = map_zoom
+        # self.tile_size = tile_size
+
+    def getLongLat(self):
+        return self._lon, self._lat
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.edit_mode = not self.edit_mode
+            print("Left mouse button pressed over the item")
+            if self.edit_mode:
+                print("Edit mode, disabling screen scrolling")
+                self.scene().setMapScrollState(False)
+            else:
+                print("Normal mode, enabling screen scrolling")
+                self.scene().setMapScrollState(True)
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        print("Release Event")
+        self.scene().setMapScrollState(True)
+        self.edit_mode = False
+        self.scene().zoomIn()
+        self.scene().zoomOut()
+        return super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.edit_mode:
+            pos = event.scenePos()
+            lat, lon = self.scene().lonLatFromPos(pos.x(), pos.y())
+            print(f"Mouse moved to {lat}, {lon}")
+            self.setLonLat(lat, lon)
+        super().mousePressEvent(event)

@@ -43,63 +43,28 @@ class MapZoom(QMainWindow):
         view.setOptimizationFlag(QGraphicsView.DontSavePainterState, True)
         view.setRenderHint(QPainter.Antialiasing, True)
         view.setRenderHint(QPainter.SmoothPixmapTransform, True)
-        
-        pointItem = view.scene().addCircle(172.6, -43.5, 3)
-        pointItem.setBrush(Qt.red)
-        pointItem.setToolTip('172.6, -43.5')
-        pointItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        pointItem.setZValue(1)
-        pointItem.setVisible(True)
 
-        lats = list()
-        lons = list()
+        # lats = list()
+        # lons = list()
+        polylineItem = view.scene().addPolyline()
         for p in POINTS:
-            pointItem = view.scene().addCircle(p[0], p[1], 5)
+            pointItem = view.scene().addPoint(p[0], p[1], 5)
             pointItem.setBrush(Qt.green)
             pointItem.setPen(QPen(Qt.NoPen))
             pointItem.setToolTip('%f, %f' % (p[0], p[1]))
             pointItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             pointItem.setZValue(1)
             pointItem.setVisible(True)
-            lons.append(p[0])
-            lats.append(p[1])
-
-        # lineItem = view.scene().addLine(172.6, -43.5, 172.7, -43.6)
-        # lineItem.setPen(QPen(QBrush(Qt.blue), 3.0))
-
-        polylineItem = view.scene().addPolyline(lons, lats)
+            polylineItem.appendPoint(pointItem)
         polylineItem.setPen(QPen(QBrush(Qt.red), 3.0))
-        polylineItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
-        pix = QPixmap(24, 24)
-        pix.fill(Qt.red)
-        pixmapItem = view.scene().addPixmap(172.64, -43.54, pix)
-        pixmapItem.setOffset(-12, -12)
-        pointItemPixmapOrigin = view.scene().addCircle(172.62, -43.52, 3.0)
-        pointItemPixmapOrigin.setBrush(Qt.black)
+            # lons.append(p[0])
+            # lats.append(p[1])
 
-        pointItemWithChild = view.scene().addCircle(172.65, -43.55, 3.0)
-        pointItemWithChild.setBrush(Qt.blue)
-        pointItemWithChild.setPen(QPen(Qt.NoPen))
 
-        textItem = QGraphicsSimpleTextItem('Annotation\nfor blue point', parent=pointItemWithChild)
-        textItem.setBrush(QBrush(QColor(Qt.blue)))
-        textItem.setPos(-5, 3)
-
-        lats_2 = list()
-        lons_2 = list()
-        for p in POINTS_2:
-            lons_2.append(p[0])
-            lats_2.append(p[1])
-        linesGroupItem = view.scene().addLinesGroup(lons_2, lats_2)
-        linesGroupItem.setLineStyle(POINTS_2_COLORS, width=POINTS_2_SIZES)
-
-        legendItem = view.scene().addLegend()
-        legendItem.addPoint('Point 1', '#FF0000', border=None)
-        legendItem.addRect('Rect 2', '#00FF00', border=None)
-        legendItem.addPoint('Circle 3', '#0000FF', border=None)
-        legendItem.addRect('Sphere 4', '#00FFFF', border=None)
-        legendItem.addPoint('Polygon 5', '#FF00FF', border=None)
+        # polylineItem = view.scene().addPolyline(lons, lats)
+        # polylineItem.setPen(QPen(QBrush(Qt.red), 3.0))
+        # polylineItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
         scaleItem = view.scene().addScale(anchor=Qt.BottomRightCorner)
 
