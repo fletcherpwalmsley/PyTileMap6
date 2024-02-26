@@ -25,6 +25,7 @@ class MapGraphicsView(QGraphicsView):
         scene = MapGraphicsScene(tileSource)
         self.setScene(scene)
         self._lastMousePos = None
+        self.setCursor(Qt.OpenHandCursor)
 
     @Slot()
     def close(self):
@@ -49,6 +50,7 @@ class MapGraphicsView(QGraphicsView):
         Args:
             event(QMouseEvent): Mouse event.
         """
+        self.setCursor(Qt.ClosedHandCursor)
         QGraphicsView.mousePressEvent(self, event)
         if event.buttons() == Qt.LeftButton:
             self._lastMousePos = event.pos()
@@ -71,6 +73,7 @@ class MapGraphicsView(QGraphicsView):
         Args:
             event(QMouseEvent): Mouse event.
         """
+        self.setCursor(Qt.OpenHandCursor)
         QGraphicsView.mouseReleaseEvent(self, event)
 
     def wheelEvent(self, event):

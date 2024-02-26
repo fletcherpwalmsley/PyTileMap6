@@ -436,6 +436,7 @@ class MapGraphicsPoint(MapGraphicsCircleItem):
                                        )
         self.edit_mode = False
         self.updatePolyline = None
+        self.setCursor(Qt.CrossCursor)
 
     def setPolylineUpdateMethod(self, method):
         self.updatePolyline = method
