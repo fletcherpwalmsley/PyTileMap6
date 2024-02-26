@@ -236,6 +236,7 @@ class MapGraphicsPolylineItem(MapItem, QGraphicsPathItem):
         MapItem.__init__(self)
         self._points: list[MapGraphicsPoint] = points
 
+    # TODO: Fix this method to work with the new MapGraphicsPoint
     def createPoint(self, longitude, latitude):
         self._points.append((longitude, latitude))
         scene = self.scene()
@@ -243,6 +244,7 @@ class MapGraphicsPolylineItem(MapItem, QGraphicsPathItem):
             self.updatePosition(scene)
 
     def appendPoint(self, point):
+        point.setPolylineUpdateMethod(self.updatePosition)
         self._points.append(point)
         scene = self.scene()
         if scene is not None:
@@ -433,8 +435,10 @@ class MapGraphicsPoint(MapGraphicsCircleItem):
                                        parent
                                        )
         self.edit_mode = False
-        # self._zoom = map_zoom
-        # self.tile_size = tile_size
+        self.updatePolyline = None
+
+    def setPolylineUpdateMethod(self, method):
+        self.updatePolyline = method
 
     def getLongLat(self):
         return self._lon, self._lat
@@ -442,26 +446,21 @@ class MapGraphicsPoint(MapGraphicsCircleItem):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.edit_mode = not self.edit_mode
-            print("Left mouse button pressed over the item")
             if self.edit_mode:
-                print("Edit mode, disabling screen scrolling")
                 self.scene().setMapScrollState(False)
             else:
-                print("Normal mode, enabling screen scrolling")
                 self.scene().setMapScrollState(True)
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        print("Release Event")
         self.scene().setMapScrollState(True)
         self.edit_mode = False
-        self.scene().zoomIn()
-        self.scene().zoomOut()
         return super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
         if self.edit_mode:
             pos = event.scenePos()
             lat, lon = self.scene().lonLatFromPos(pos.x(), pos.y())
-            print(f"Mouse moved to {lat}, {lon}")
             self.setLonLat(lat, lon)
+            if self.updatePolyline is not None:
+                self.updatePolyline(self.scene())
         super().mousePressEvent(event)
