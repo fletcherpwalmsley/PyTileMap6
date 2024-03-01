@@ -5,7 +5,7 @@ from qtpy.QtGui import QPixmap
 
 from .maptilesource import MapTileSource
 import grequests
-
+import os
 
 class MapTileHTTPLoader(QObject):
 
@@ -22,13 +22,18 @@ class MapTileHTTPLoader(QObject):
     def asyncLoadTile(self, x, y, zoom, url):
         url = f"https://basemaps.linz.govt.nz/v1/tiles/aerial/WebMercatorQuad/{zoom}/{x}/{y}.jpeg?api=c01hj0qr6shwmem3jazjgqvrzsc"
         key = (x, y, zoom)
-        if key not in self._tileInDownload:
+        if key in self._tileInDownload:
+            print(f"In memory {key[0]}/{key[1]}/{key[2]}.jpeg")
+            self.tileLoaded.emit(key[0], key[1], key[2], self._tileInDownload[key])
+        elif os.path.isfile(f"tiles/{key[0]}/{key[1]}/{key[2]}.jpeg"):
+            print(f"On disk: {key[0]}/{key[1]}/{key[2]}.jpeg")
+            with open(f"tiles/{key[0]}/{key[1]}/{key[2]}.jpeg", 'rb') as f:
+                self._tileInDownload[key] = f.read()
+                self.tileLoaded.emit(key[0], key[1], key[2], self._tileInDownload[key])
+        else:
+            print(f"Requesting: {key[0]}/{key[1]}/{key[2]}.jpeg")
             self._grs.append(grequests.get(url))
             self._gps_keys.append(key)
-        else:
-            self.tileLoaded.emit(key[0], key[1], key[2], self._tileInDownload[key])
-
-
 
     @Slot()
     def asyncFetchTile(self):
@@ -37,6 +42,10 @@ class MapTileHTTPLoader(QObject):
             responses = grequests.map(self._grs)
             for key, response in zip(self._gps_keys, responses):
                 self._tileInDownload[key] = response.content
+                write_path = f"tiles/{key[0]}/{key[1]}/"
+                os.makedirs(write_path, exist_ok=True)
+                with open(f"{write_path}{key[2]}.jpeg", 'wb') as f:
+                    f.write(response.content)
                 self.tileLoaded.emit(key[0], key[1], key[2], self._tileInDownload[key])
             self._grs.clear()
             self._gps_keys.clear()
@@ -95,11 +104,10 @@ class MapTileSourceHTTP(MapTileSource):
     def handleTileDataLoaded(self, x, y, zoom, data):
         pix = QPixmap()
         pix.loadFromData(data)
-        print(f"Got {x}/{y}/{zoom}")
         self.tileReceived.emit(x, y, zoom, pix)
 
     def abortAllRequests(self):
         self._loader.abortAllRequests()
 
     def imageFormat(self):
-        return 'PNG'
+        return 'jpg'
