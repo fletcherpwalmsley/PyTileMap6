@@ -21,8 +21,8 @@ class MapTileHTTPLoader(QObject):
         self._grs_keys = list()
         self._grs_bundles = list()
         self._threadlock = threading.Lock()
+        self._memTileLimit = 500
 
-    # @Slot(int, int, int, str)
     def asyncLoadTile(self, x, y, zoom, url):
         url = f"https://basemaps.linz.govt.nz/v1/tiles/aerial/WebMercatorQuad/{zoom}/{x}/{y}.jpeg?api=c01hj0qr6shwmem3jazjgqvrzsc"
         key = (x, y, zoom)
@@ -51,7 +51,13 @@ class MapTileHTTPLoader(QObject):
                 with open(f"{write_path}{key[2]}.jpeg", 'wb') as f:
                     f.write(response.content)
                 self.tileLoaded.emit(key[0], key[1], key[2], self._tileInDownload[key])
+                response.close()
             self.fetchBundleDone.emit()
+
+        # While this thread is running, do a bit of memory management
+        if len(self._tileInDownload) > self._memTileLimit:
+            while len(self._tileInDownload) > self._memTileLimit:
+                del self._tileInDownload[next(iter(self._tileInDownload))]
 
     def bundle_requests(self):
         assert len(self._grs_keys) == len(self._grs)
@@ -78,8 +84,8 @@ class MapTileHTTPLoader(QObject):
     def abortRequest(self, x, y, zoom):
         # p = (x, y, zoom)
         # if p in self._tileInDownload:
-            # reply = self._tileInDownload[p]
-            # del self._tileInDownload[p]
+        #     reply = self._tileInDownload[p]
+        #     del self._tileInDownload[p]
         #     reply.close()
         #     reply.deleteLater()
         print("Aborting requests")
