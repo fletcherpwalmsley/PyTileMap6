@@ -91,3 +91,9 @@ class MapGraphicsView(QGraphicsView):
             self.scene().zoomIn(event.pos())
         elif delta < 0:
             self.scene().zoomOut(event.pos())
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Equal and not event.isAutoRepeat():
+            self.scene().zoomIn()
+        if event.key() == Qt.Key_Minus and not event.isAutoRepeat():
+            self.scene().zoomOut()

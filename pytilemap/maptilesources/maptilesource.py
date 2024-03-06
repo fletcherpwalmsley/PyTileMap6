@@ -7,6 +7,7 @@ from qtpy.QtGui import QPixmap
 class MapTileSource(QObject):
 
     tileReceived = Signal(int, int, int, QPixmap)
+    redrawNeeded = Signal()
 
     _tileSize = None
     _minZoom = None

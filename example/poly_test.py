@@ -58,14 +58,6 @@ class MapZoom(QMainWindow):
             polylineItem.appendPoint(pointItem)
         polylineItem.setPen(QPen(QBrush(Qt.red), 3.0))
 
-            # lons.append(p[0])
-            # lats.append(p[1])
-
-
-        # polylineItem = view.scene().addPolyline(lons, lats)
-        # polylineItem.setPen(QPen(QBrush(Qt.red), 3.0))
-        # polylineItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
-
         scaleItem = view.scene().addScale(anchor=Qt.BottomRightCorner)
 
 

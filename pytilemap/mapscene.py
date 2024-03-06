@@ -2,7 +2,8 @@ from __future__ import print_function, absolute_import, division
 
 from numpy import floor
 
-from qtpy.QtCore import Qt, Slot, Signal, QRect, QRectF, QPointF, QSizeF
+from qtpy.QtCore import Qt, Slot, Signal, QRect, \
+    QRectF, QPointF, QSizeF, QPoint
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import QGraphicsScene
 
@@ -13,7 +14,6 @@ from .maplegenditem import MapLegendItem
 from .mapescaleitem import MapScaleItem
 from .functions import iterRange
 from .tileutils import posFromLonLat, lonLatFromPos
-
 
 class MapGraphicsScene(QGraphicsScene):
     """Graphics scene for showing a slippy map.
@@ -35,6 +35,7 @@ class MapGraphicsScene(QGraphicsScene):
         self._tileSource = tileSource
         self._tileSource.setParent(self)
         self._tileSource.tileReceived.connect(self.setTilePixmap)
+        self._tileSource.redrawNeeded.connect(self.tilesLoaded)
         tdim = self._tileSource.tileSize()
 
         self._emptyTile = QPixmap(tdim, tdim)
@@ -55,6 +56,7 @@ class MapGraphicsScene(QGraphicsScene):
 
     def setTileSource(self, newTileSource):
         self._tileSource.tileReceived.disconnect(self.setTilePixmap)
+        self._tileSource.redrawNeeded.disconnect(self.tilesLoaded)
         self._tileSource.close()
 
         self._tilePixmaps.clear()
@@ -63,6 +65,7 @@ class MapGraphicsScene(QGraphicsScene):
         self._tileSource = newTileSource
         self._tileSource.setParent(self)
         self._tileSource.tileReceived.connect(self.setTilePixmap)
+        self._tileSource.redrawNeeded.connect(self.tilesLoaded)
 
         self.requestTiles()
 
@@ -177,7 +180,7 @@ class MapGraphicsScene(QGraphicsScene):
                            current center position.
         """
         if pos is None:
-            pos = self.sceneRect().center()
+            pos = QPoint(self.width()/2, self.height()/2)
         self.zoomTo(pos, self._zoom + 1)
 
     def zoomOut(self, pos=None):
@@ -188,7 +191,7 @@ class MapGraphicsScene(QGraphicsScene):
                            current center position.
         """
         if pos is None:
-            pos = self.sceneRect().center()
+            pos = QPoint(self.width()/2, self.height()/2)
         self.zoomTo(pos, self._zoom - 1)
 
     def zoom(self):
@@ -206,7 +209,6 @@ class MapGraphicsScene(QGraphicsScene):
         """
         if self._zoom == zoom:
             self._tilePixmaps[(x, y)] = pixmap
-        self.update()
 
     def requestTiles(self):
         """Request the loading of tiles.
@@ -223,6 +225,7 @@ class MapGraphicsScene(QGraphicsScene):
         top = tilesRect.top()
         tileSource = self._tileSource
         zoom = self._zoom
+        requestNeeded = False
 
         # Request load of new tiles
         for x in iterRange(numXtiles):
@@ -230,11 +233,19 @@ class MapGraphicsScene(QGraphicsScene):
                 tp = (left + x, top + y)
                 # Request tile only if missing
                 if tp not in tilePixmaps:
-                    # pix = tileSource.requestTile(tp[0], tp[1], zoom)
-                    pix = tileSource.asyncLoadTiles(tp[0], tp[1], zoom)
-                    if pix is not None:
-                        tilePixmaps[tp] = pix
-        tileSource.asyncRequestTiles()
+                    tileSource.asyncLoadTiles(tp[0], tp[1], zoom)
+                    requestNeeded = True
+
+        if requestNeeded:
+            tileSource.asyncRequestTiles()
+
+    @Slot()
+    def tilesLoaded(self):
+        """Callback for the loading of the tiles.
+
+        Update the scene with the new tiles
+        """
+        print("Redrawing screen")
         self.update()
 
     def tileRect(self, tx, ty):
