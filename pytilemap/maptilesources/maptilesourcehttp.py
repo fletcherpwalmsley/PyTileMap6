@@ -65,15 +65,12 @@ class MapTileHTTPLoader(QObject):
 
     @Slot()
     def asyncFetchTile(self):
-        print("Bundle existing requests")
         self.bundle_requests()
         if self._threadlock.locked():
-            print("Thread is locked, returning")
             return
         else:
             with self._threadlock:
                 if len(self._grs_bundles) > 0:
-                    print("Starting thread")
                     thread = threading.Thread(target=self.fetch_tile)
                     thread.start()
 

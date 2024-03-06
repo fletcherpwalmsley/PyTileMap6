@@ -245,7 +245,6 @@ class MapGraphicsScene(QGraphicsScene):
 
         Update the scene with the new tiles
         """
-        print("Redrawing screen")
         self.update()
 
     def tileRect(self, tx, ty):
